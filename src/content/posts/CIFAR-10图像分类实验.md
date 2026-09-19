@@ -1430,4 +1430,3 @@ graph TD
     D --> G["visualize_image_classification.py<br/>8 个测试样本预测对比<br/>Green=Correct, Red=Wrong"]
     G --> H["结论<br/>卷积+残差结构显著优于全连接网络<br/>ResNet-18 存在过拟合，可用更多增强/正则缓解"]
 ```
-*（内容由AI生成，仅供参考）*

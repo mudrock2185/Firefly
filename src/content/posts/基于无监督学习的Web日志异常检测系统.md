@@ -540,4 +540,3 @@ D:\miniconda3\python.exe C:\Users\Mudrock\Desktop\日志审计\综合实验\algo
 | 04_分析结果/metrics.md | 异常样本展示与占比结论 |
 | 05_调试过程/debug_log.txt | preprocess.py 与 algo.py 两次运行的终端输出记录 |
 | 06_综合实验报告.docx / .pdf | 原始报告正文（本文来源文档） |
-*（内容由AI生成，仅供参考）*
