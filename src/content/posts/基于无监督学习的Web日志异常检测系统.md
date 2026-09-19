@@ -14,7 +14,7 @@ description: 基于无监督学习的 Web 日志异常检测系统实践记录�
 tags: [日志审计, 无监督学习, Drain, IsolationForest, 异常检测, Python]
 category: 日志审计
 licenseName: ''
-author: kilolo
+author: Mudrock
 sourceLink: ''
 slug: web-log-anomaly-detection
 image: ./images/LogAuditExp5/log-01.png

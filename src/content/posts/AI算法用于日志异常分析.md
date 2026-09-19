@@ -14,7 +14,7 @@ description: 基于 Python 的日志异常分析实验：用 Drain 算法解析 
 tags: [日志分析, AI算法, Drain, IsolationForest, DVWA, 异常检测]
 category: 日志审计
 licenseName: ''
-author: kilolo
+author: Mudrock
 sourceLink: ''
 slug: ai-log-anomaly-detection
 image: ./images/LogAuditExp4/log-01.png

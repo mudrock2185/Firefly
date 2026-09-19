@@ -14,7 +14,7 @@ description: 基于 PyTorch 的 CIFAR-10 图像分类实验：围绕 CIFAR-10 �
 tags: [深度学习, 图像分类, CIFAR-10, MLP, ResNet-18, PyTorch]
 category: 深度学习
 licenseName: ''
-author: kilolo
+author: Mudrock
 sourceLink: ''
 slug: cifar10-image-classification
 image: ./images/DSExp1/ds-01.png

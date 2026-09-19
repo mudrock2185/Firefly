@@ -14,7 +14,7 @@ description: 记录「DVWA 靶机攻击日志收集与观察」实验：在实�
 tags: [日志分析, DVWA, Grafana, Promtail, 攻击日志]
 category: 日志审计
 licenseName: ''
-author: kilolo
+author: Mudrock
 sourceLink: ''
 slug: dvwa-attack-log-observation
 image: ./images/LogAuditExp3/log-01.png
