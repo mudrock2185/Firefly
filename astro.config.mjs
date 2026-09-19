@@ -69,6 +69,9 @@ const adapter = process.env.CF_WORKERS
 export default defineConfig({
 	site: siteConfig.site_url,
 
+	// 禁用 Astro 开发工具栏（dev toolbar）
+	devToolbar: { enabled: false },
+
 	base: "/",
 	trailingSlash: "always",
 
