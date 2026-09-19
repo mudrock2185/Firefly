@@ -51,7 +51,7 @@ export const musicPlayerConfig: MusicPlayerConfig = {
 				name: "使一颗心免于哀伤",
 				artist: "知更鸟 / HOYO-MiX / Chevy",
 				url: "/assets/music/使一颗心免于哀伤-哼唱.mp3",
-				cover: "/assets/music/cover/109951169585655912.webp",
+				cover: "/assets/music/cover/reversed-time.webp",
 				lrc: "",
 			},
 		],
