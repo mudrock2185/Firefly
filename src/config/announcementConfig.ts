@@ -8,7 +8,7 @@ export const announcementConfig: AnnouncementConfig = {
 	content: "欢迎来到我的博客！本站将持续上传一些我的各项学习资料等内容。",
 
 	// 是否允许用户关闭公告
-	closable: true,
+	closable: false,
 
 	link: {
 		// 启用链接
