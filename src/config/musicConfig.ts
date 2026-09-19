@@ -48,8 +48,8 @@ export const musicPlayerConfig: MusicPlayerConfig = {
 	local: {
 		playlist: [
 			{
-				name: "使一颗心免于哀伤",
-				artist: "知更鸟 / HOYO-MiX / Chevy",
+				name: "Reversed Time",
+				artist: "塞壬唱片-MSR",
 				url: "/assets/music/Reversed-Time.mp3",
 				cover: "/assets/music/cover/reversed-time.webp",
 				lrc: "",
