@@ -47,3 +47,6 @@ package/
 .codex*
 .claude
 .mimocode
+
+# 大型实验材料压缩包（超过 GitHub 100MB 单文件限制，本地保留，线上需托管到外部存储）
+public/files/
