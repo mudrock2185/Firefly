@@ -17,12 +17,12 @@ licenseName: ''
 author: Mudrock
 sourceLink: ''
 slug: cifar10-image-classification
-image: ./images/DSExp1/ds-01.png
+image: ''
 ---
 
 
 
-本文是《数据科学与数学建模》实验一的完整记录：在 PyTorch 框架下围绕 CIFAR-10 数据集搭建「数据工程 → 模型定义 → 训练与测试 → 可视化对比」的完整流程，分别用多层感知机（MLP）与 ResNet-18 完成 10 类彩色图像的分类，并对两种模型的参数量、测试准确率、训练曲线、混淆矩阵与预测结果做对比分析。
+本文是在 PyTorch 框架下围绕 CIFAR-10 数据集搭建「数据工程 → 模型定义 → 训练与测试 → 可视化对比」的完整流程，分别用多层感知机（MLP）与 ResNet-18 完成 10 类彩色图像的分类，并对两种模型的参数量、测试准确率、训练曲线、混淆矩阵与预测结果做对比分析。
 
 ## 一、实验目的及要求
 
