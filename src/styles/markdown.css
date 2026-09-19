@@ -3,6 +3,20 @@
 .custom-md {
   overflow-wrap: break-word;
 
+  /* 关于等单页：移除标题旁的 # 锚点徽章 */
+  &.no-heading-anchor {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      .anchor {
+        @apply hidden!;
+      }
+    }
+  }
+
   body.sticky-navbar & {
     [id] {
       scroll-margin-top: 5.5rem;
