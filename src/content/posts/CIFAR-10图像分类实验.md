@@ -1396,28 +1396,6 @@ ResNet-18 的训练曲线（10 个 epoch）：
 
 2026年5月21日
 
-## 七、实验材料下载
-
-本次实验的完整材料（含 CIFAR-10 数据集、两个模型的最优权重、训练曲线与 history、全部脚本源码、实验任务书）已打包放在博客静态资源目录（`public/files/ds-exp1/`，约 205.7 MB），可直接下载：
-
-**下载入口**：[ds-exp1-materials.zip](/files/ds-exp1/ds-exp1-materials.zip)（点击下载 / 右键另存为）
-
-若站点已配置自定义域名，也可直接用完整地址下载：`https://<你的博客域名>/files/ds-exp1/ds-exp1-materials.zip`
-
-压缩包根目录为 `202308764620+李文峰+数据科学与数学建模 实验1/`，解压后的主要材料如下（均可直接用于复现本实验）：
-
-| 材料 | 说明 |
-| --- | --- |
-| `exp1_stu/data/cifar-10-batches-py/` | CIFAR-10 原始数据集（data_batch_1~5、test_batch、batches.meta） |
-| `exp1_stu/checkpoints/MLP_best.pth` | MLP 最优权重（验证准确率最高时保存） |
-| `exp1_stu/checkpoints/ResNet18_best.pth` | ResNet-18 最优权重 |
-| `exp1_stu/checkpoints/*_curves.png`、`*_history.json` | 训练曲线与逐 epoch 训练历史 |
-| `exp1_stu/*.py` | 数据工程、模型定义、训练与测试、主程序、可视化五个脚本 |
-| `exp1_stu/实验1任务书.md` | 实验任务书与代码完成优先级说明 |
-| `exp1_stu/comparison_results.txt` | 模型对比结果文本 |
-
-> 运行方式：把材料解压到本地，进入 `exp1_stu` 目录，先依次运行 `data_engineering.py`、`models.py`、`train.py` 自测，再执行 `python main.py` 与 `python visualize_image_classification.py`。
-
 ## 附：实验整体流程
 
 ```mermaid
