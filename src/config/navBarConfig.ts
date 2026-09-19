@@ -36,11 +36,11 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 		],
 	});
 
-	// 我的及其子菜单
+	// 更多及其子菜单
 	links.push({
-		name: "我的",
+		name: "更多",
 		url: "#",
-		icon: "material-symbols:person",
+		icon: "material-symbols:apps",
 		children: [
 			// 动态
 			LinkPresets.Dynamic,
