@@ -8,7 +8,7 @@ AIGC:
     PropagateID: 278e15af09c947df43b62560d322c33a_a8dfa7f9b40c11f1a1a1525400393706
     ReservedCode2: 6X3cs0FSzFzQn8frK6R/iewYjqXN5Ed2DZ0QTRUBagTRMK+QE9nOJ3QIdOy9d5rNUby/1tyfArZBZ7Oi8Vp65a1FhM8EcoSJanhCyUtxb+bPHuPrkHaEcNSWWOgD+rJdGB6YKVe79iGhsImo/o9indgS0vTNZHeWnybVNHl2WDEeNnmiWSJyTF9wbMg=
 title: AI算法用于日志异常分析（Python）
-published: 2026-09-19
+published: 2026-08-23
 pinned: false
 description: 基于 Python 的日志异常分析实验：用 Drain 算法解析 HDFS 模拟日志并统计模板频率，用 TF-IDF + Isolation Forest 完成异常检测，再在实验4专用 DVWA 环境中执行 SQL 注入、暴力破解、目录扫描等真实攻击，对比规则统计法与 AI 算法两种检测结果。
 tags: [日志分析, AI算法, Drain, IsolationForest, DVWA, 异常检测]
