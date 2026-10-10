@@ -111,10 +111,11 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 					showName: true,
 				},
 				{
-				name: "Email",
-				icon: "fa7-solid:envelope",
-				url: "mailto:xiaye@msn.com",
-			},
+					name: "Email",
+					icon: "fa7-solid:envelope",
+					url: "mailto:xiaye@msn.com",
+					showName: true,
+				},
 		],
 		},
 		// 壁纸轮播配置，横幅壁纸和全屏壁纸共享，仅在配置多张图片时生效
