@@ -84,7 +84,7 @@ image: ''
 
 - 训练集 transform 使用 `RandomCrop(32, padding=4)` + `RandomHorizontalFlip(0.5)` 做数据增强，再 `ToTensor()` 与 `Normalize(mean, std)` 标准化；测试集只保留 `ToTensor()` + `Normalize()`，去掉随机增强。
 - 用 `datasets.CIFAR10(root, train=True/False, download=True, transform=...)` 分别加载训练集与测试集。
-- 用 `random_split` 按 9:1 划分训练/验证子集，并用 `generator=torch.Generator().manual_seed(42)` 固定随机种子保证可复现。
+- 用 `random_split` 按 `9:1` 划分训练/验证子集，并用 `generator=torch.Generator().manual_seed(42)` 固定随机种子保证可复现。
 - `random_split` 返回的是 Subset，需要把验证集的 `transform` 改回 `test_transform`，避免验证阶段带随机增强。
 - 三个 DataLoader 中训练集 `shuffle=True`、验证/测试集 `shuffle=False`；`pin_memory` 依据 `torch.cuda.is_available()` 决定。
 
@@ -660,7 +660,7 @@ if __name__ == '__main__':
 执行流程：
 
 1. 配置计算设备（CUDA 可用则用 GPU，否则回退 CPU 并给出提示）。
-2. 数据准备：`CIFAR10Data(batch_size=128, num_workers=0)`（Windows 下 `num_workers=0`），按 9:1 划分验证集。
+2. 数据准备：`CIFAR10Data(batch_size=128, num_workers=0)`（Windows 下 `num_workers=0`），按 `9:1` 划分验证集。
 3. 构建 MLP（dropout=0.3），学习率 0.001 训练 10 个 epoch，保存最优权重后在测试集评估。
 4. 构建 ResNet-18，学习率 0.001 训练 10 个 epoch，保存最优权重后在测试集评估。
 5. 对比两个模型的参数量与测试准确率，把结果写入 `comparison_results.txt`。
