@@ -8,7 +8,7 @@ AIGC:
     PropagateID: 278e15af09c947df43b62560d322c33a_8c0115aeb41211f1a1a1525400393706
     ReservedCode2: /r+1AudtxlNUiI3nWT40GRSuHbV+FcTac7yPQphG2xYNzO2PcRmJE7HWaBq5pZlO+COt4avVF4DZt/u5itDCMbXFgq/BTb/3UhNv1ZeYkYp50iiDzxFNLxX9+qdYtLFT4tWQHO1gd7eP0z+KDsbc/kaw2xMvjyRTWksgF3U3/Yy1CEoDHDkNk1yC5UE=
 title: 基于无监督学习的Web日志异常检测系统
-published: 2026-09-19
+published: 2026-08-27
 pinned: false
 description: 基于无监督学习的 Web 日志异常检测系统实践记录：以 Kaggle Web Log Dataset 的 16007 条 OJ 服务器日志为对象，构建从原始日志到异常告警的无监督检测流水线——数据清洗与字段解析、Drain 日志模板挖掘、时间窗口特征工程、Isolation Forest 无监督异常检测，最终定位出登录爆破尝试与越权访问等典型异常请求。
 tags: [日志审计, 无监督学习, Drain, IsolationForest, 异常检测, Python]
