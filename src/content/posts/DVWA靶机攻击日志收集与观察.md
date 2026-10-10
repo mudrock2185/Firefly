@@ -8,7 +8,7 @@ AIGC:
     PropagateID: 278e15af09c947df43b62560d322c33a_eeb94a03b40911f1812e525400248c00
     ReservedCode2: b9ihIhmWuMfyhiJOqok0rcykbGdnVvtZdpNJGcMWou0hJolpLR1U7wU9OlNTJIOp8pHQJ5Ppx/Xgqsm/ls2zjbkiUd/olMc4pRHyqRn/AaKvz8BEvSezhhyDyn19WdSosnh0JRmW9IYXnOkK7RuR9uesafc7uPV8Exr7rp4+tYhjB/GjZAdIIyXddjo=
 title: DVWA靶机攻击日志收集与观察
-published: 2026-09-19
+published: 2026-08-16
 pinned: false
 description: 记录「DVWA 靶机攻击日志收集与观察」实验：在实验 2 的日志架构基础上引入 DVWA 靶机，由 Promtail 从靶机采集日志，通过攻击 DVWA 靶机产生攻击日志，再在浏览器中利用 Grafana 观察生成的攻击日志，建立攻击行为与日志数据之间的关联概念。
 tags: [日志分析, DVWA, Grafana, Promtail, 攻击日志]
