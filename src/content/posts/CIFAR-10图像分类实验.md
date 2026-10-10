@@ -7,8 +7,8 @@ AIGC:
     ContentPropagator: 001191440300708461136T1XGW3
     PropagateID: 278e15af09c947df43b62560d322c33a_b22ba832b41711f1812e525400248c00
     ReservedCode2: 3UstoPOaNpLsUL1e55CmKE915wyDcDShomfUbMtKDMBYFwAmmZ0//pLoLxNvHV7AF3Xn6NxuZ0SeWA5tPztpF72qadtKzJCIVa/tZDSzyBPJoCy6hxhiJ8wHz3EFL4tYmrP/kUdtBXE4sfkDkMuc77WBEseD7wQSlw1NkMfmcpdwbzQzz6gqkmgcUpE=
-title: CIFAR-10图像分类实验
-published: 2026-09-19
+title: CIFAR-10图像分类
+published: 2026-08-19
 pinned: false
 description: 基于 PyTorch 的 CIFAR-10 图像分类实验：围绕 CIFAR-10 数据集搭建「数据工程 → 模型定义 → 训练与测试 → 可视化对比」完整流程，分别用多层感知机（MLP）与 ResNet-18 完成 10 类彩色图像分类，并对比两种模型的参数量、测试准确率、训练曲线、混淆矩阵与预测结果。
 tags: [深度学习, 图像分类, CIFAR-10, MLP, ResNet-18, PyTorch]
