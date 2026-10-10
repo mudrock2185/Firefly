@@ -50,10 +50,9 @@ image: ''
 
 ### 2.2 实验内容与脚本顺序
 
-1. 依次完成 `data_engineering.py`、`models.py`、`train.py` 中的代码补全。
-2. 分别运行上述三个文件，确认各自能够正常执行。
-3. 运行 `python main.py` 完成完整实验。
-4. 运行 `python visualize_image_classification.py` 生成可视化结果。
+1. 分别运行 `data_engineering.py`、`models.py`、`train.py` 文件，确认各自能够正常执行。
+2. 运行 `python main.py` 完成完整实验。
+3. 运行 `python visualize_image_classification.py` 生成可视化结果。
 
 | 顺序 | 脚本文件 | 类型 | 是否需编写代码 | 验证方式 |
 | :---: | :--- | :--- | :---: | :--- |
@@ -90,90 +89,38 @@ image: ''
 - 三个 DataLoader 中训练集 `shuffle=True`、验证/测试集 `shuffle=False`；`pin_memory` 依据 `torch.cuda.is_available()` 决定。
 
 ```python
-"""
-数据工程模块：负责数据加载、预处理和划分
-
-学生任务：
-创建 DataLoader
-"""
-
 import torch
 from torchvision import transforms, datasets
 from torch.utils.data import DataLoader, random_split
 
 
 class CIFAR10Data:
-    """
-    CIFAR-10 数据管理类
-
-    学生任务：
-    创建 DataLoader
-    """
 
     def __init__(self, data_dir='./data', batch_size=64, num_workers=2):
-        """
-        初始化数据管理器
-
-        Args:
-            data_dir: 数据存储路径
-            batch_size: 批次大小
-            num_workers: 数据加载线程数
-        """
         self.data_dir = data_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-        # CIFAR-10 的均值和标准差（预计算）
+        # CIFAR-10 预计算的通道均值与标准差，用于标准化
         self.mean = (0.4914, 0.4822, 0.4465)
         self.std = (0.2023, 0.1994, 0.2010)
 
-        # 定义训练集的 transform（需包含数据增强）
-        #   1. 使用 transforms.Compose 将多个变换组合在一起
-        #   2. 数据增强是为了提高模型的泛化能力，防止过拟合
-        #   3. 建议的数据增强操作：
-        #      - transforms.RandomCrop(32, padding=4)：随机裁剪，padding=4 表示先在图像四周填充 4 个像素
-        #      - transforms.RandomHorizontalFlip(p=0.5)：以 50% 的概率水平翻转图像
-        #      - transforms.ToTensor()：将 PIL Image 转为 Tensor，并把像素值从 [0,255] 归一化到 [0,1]
-        #      - transforms.Normalize(mean, std)：用预计算的均值和标准差进行标准化
-        #   4. 注意：数据增强只应在训练时使用，测试时不需要
+        # 训练集 transform：随机裁剪 + 水平翻转做数据增强，提升泛化能力
         self.train_transform = transforms.Compose([
-            # 提示：考虑使用 RandomCrop、RandomHorizontalFlip、ColorJitter
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(p=0.5),
             transforms.ToTensor(),
             transforms.Normalize(self.mean, self.std)
         ])
 
-        # 定义测试集的 transform（只需归一化，无需增强）
-        #   1. 测试/验证时不需要数据增强，只做必要的预处理即可
-        #   2. 必须包含 ToTensor() 和 Normalize()，保持与训练时相同的预处理流程
-        #   3. 不要加入 RandomCrop、RandomHorizontalFlip 等随机增强操作
-
+        # 测试集 transform：只做 ToTensor 与归一化，不引入随机增强
         self.test_transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize(self.mean, self.std)
         ])
 
     def load_data(self):
-        """
-        加载 CIFAR-10 数据集
-
-        Returns:
-            full_train: 完整训练集（含验证集）
-            test_dataset: 测试集
-        """
-        # [学生填空]
-        # TODO : 使用 datasets.CIFAR10 加载训练集和测试集
-        # 提示：
-        #   1. datasets.CIFAR10 是 torchvision 内置的数据集类
-        #   2. 参数说明：
-        #      - root: 数据存放目录（self.data_dir）
-        #      - train=True: 加载训练集（50000张）；train=False: 加载测试集（10000张）
-        #      - download=True: 如果本地没有数据，自动从网络下载
-        #      - transform: 数据预处理管道（训练集用 self.train_transform，测试集用 self.test_transform）
-        #   3. 注意：训练集和测试集要分别设置不同的 transform
-
-        # 去掉下面代码的注释，并补全代码
+        # 分别加载训练集（50000 张）与测试集（10000 张），本地缺失时自动下载
         full_train = datasets.CIFAR10(
             root=self.data_dir,
             train=True,
@@ -194,29 +141,10 @@ class CIFAR10Data:
         return full_train, test_dataset
 
     def split_data(self, full_train, val_ratio=0.1):
-        """
-        将训练集划分为训练集和验证集
-
-        Args:
-            full_train: 完整训练集
-            val_ratio: 验证集比例
-
-        Returns:
-            train_dataset: 训练子集
-            val_dataset: 验证子集（需重新设置 transform 为 test_transform）
-        """
+        # 按 9:1 划分训练/验证子集，固定随机种子保证可复现
         total_size = len(full_train)
         val_size = int(total_size * val_ratio)
         train_size = total_size - val_size
-
-        # 使用 random_split 划分数据集
-        #   1. random_split(dataset, lengths) 可以将数据集按比例切分
-        #   2. lengths 是一个列表，表示每份子集的大小，如 [train_size, val_size]
-        #   3. 为了保证实验可复现，需要设置随机种子：
-        #      generator=torch.Generator().manual_seed(42)
-        #   4. random_split 返回的是 Subset 对象，验证集需要去掉数据增强：
-        #      val_dataset.dataset.transform = self.test_transform
-        #      （因为 Subset 不复制数据，修改的是原数据集的 transform）
 
         train_dataset, val_dataset = random_split(
             full_train,
@@ -224,8 +152,7 @@ class CIFAR10Data:
             generator=torch.Generator().manual_seed(42)
         )
 
-        # 重要：验证集需要重新设置 transform（去掉数据增强）
-        # 因为 random_split 返回的是 Subset，需要修改其 dataset 的 transform
+        # random_split 返回 Subset 且不复制数据，需改回原数据集的 transform 去掉增强
         val_dataset.dataset.transform = self.test_transform
 
         print(f"训练子集大小: {len(train_dataset)}")
@@ -234,29 +161,10 @@ class CIFAR10Data:
         return train_dataset, val_dataset
 
     def get_loaders(self, val_ratio=0.1):
-        """
-        获取三个 DataLoader
-
-        Returns:
-            train_loader, val_loader, test_loader
-        """
         full_train, test_dataset = self.load_data()
         train_dataset, val_dataset = self.split_data(full_train, val_ratio)
 
-        # [学生填空]
-        # TODO : 创建三个 DataLoader
-        # 提示：
-        #   1. DataLoader 用于将 Dataset 包装成可迭代的数据加载器
-        #   2. 参数说明：
-        #      - dataset: 数据集对象
-        #      - batch_size: 每批加载的样本数（从 self.batch_size 获取）
-        #      - shuffle: 是否打乱数据。训练集设为 True，验证集和测试集设为 False
-        #      - num_workers: 加载数据的子进程数（从 self.num_workers 获取）
-        #      - pin_memory: 是否将数据固定在 CUDA 内存中，可加速 GPU 训练
-        #        判断条件：pin_memory=True if torch.cuda.is_available() else False
-        #   3. 需要分别创建 train_loader、val_loader、test_loader
-
-        # 去掉下面代码的注释，并补全代码
+        # 训练集打乱顺序，验证/测试集保持顺序；pin_memory 在 CUDA 可用时开启以加速传输
         train_loader = DataLoader(
             train_dataset,
             batch_size=self.batch_size,
@@ -284,15 +192,14 @@ class CIFAR10Data:
         return train_loader, val_loader, test_loader
 
 
-# 测试代码，不要改动此部分的代码
 if __name__ == '__main__':
     data_manager = CIFAR10Data(batch_size=64)
     train_loader, val_loader, test_loader = data_manager.get_loaders()
 
-    # 测试一个 batch
+    # 取出一个 batch 检查数据管道
     images, labels = next(iter(train_loader))
-    print(f"图像 batch 形状: {images.shape}")  # 应为 [64, 3, 32, 32]
-    print(f"标签 batch 形状: {labels.shape}")  # 应为 [64]
+    print(f"图像 batch 形状: {images.shape}")
+    print(f"标签 batch 形状: {labels.shape}")
     print(f"图像数值范围: [{images.min():.2f}, {images.max():.2f}]")
 ```
 
@@ -308,30 +215,12 @@ if __name__ == '__main__':
 - ResNet-18 整体结构（`_make_layer`、全局平均池化、FC）由任务提供，阅读并理解即可。
 
 ```python
-"""
-模型定义模块：MLP 和 ResNet-18
-
-学生任务：
-1. 完成 MLP 的前向传播函数 forward
-2. 完成 ResNet 基础残差块的前向传播函数 forward
-3. 理解 ResNet 残差结构（不用完成代码填空）
-"""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
 class MLP(nn.Module):
-    """
-    多层感知机（全连接网络）
-
-    结构：Flatten -> FC(3072, 512) -> ReLU -> Dropout
-                     -> FC(512, 256) -> ReLU -> Dropout
-                     -> FC(256, 10)
-
-    学生任务：完成 forward 函数
-    """
 
     def __init__(self, num_classes=10, dropout=0.3):
         super(MLP, self).__init__()
@@ -343,10 +232,10 @@ class MLP(nn.Module):
         self.dropout2 = nn.Dropout(dropout)
         self.fc3 = nn.Linear(256, num_classes)
 
-        # 权重初始化
         self._initialize_weights()
 
     def _initialize_weights(self):
+        # Kaiming 初始化适配 ReLU 激活，偏置置零
         for m in self.modules():
             if isinstance(m, nn.Linear):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
@@ -354,66 +243,33 @@ class MLP(nn.Module):
                     nn.init.constant_(m.bias, 0)
 
     def forward(self, x):
-        """
-        前向传播
-
-        Args:
-            x: 输入图像 [batch_size, 3, 32, 32]
-
-        Returns:
-            logits: 未归一化的分类分数 [batch_size, num_classes]
-        """
-        # [学生填空]
-        # TODO : 实现 MLP 的前向传播
-        # 提示：
-        #   1. MLP 的处理流程是线性的：展平 -> 全连接 -> 激活 -> Dropout -> 输出
-        #   2. 步骤分解：
-        #      a. 用 self.flatten(x) 将 [batch, 3, 32, 32] 展平为 [batch, 3072]
-        #      b. 通过第一层全连接 self.fc1，再用 F.relu 激活
-        #      c. 通过 self.dropout1 进行随机失活（防止过拟合）
-        #      d. 通过第二层全连接 self.fc2，再用 F.relu 激活
-        #      e. 通过 self.dropout2 进行随机失活
-        #      f. 通过第三层全连接 self.fc3，输出 10 维的 logits（不激活，不 softmax）
-        #   3. 注意：最后一层不要加 ReLU，也不要加 Softmax
-        #      - 不加 ReLU：避免截断负值，保留完整的分类分数
-        #      - 不加 Softmax：CrossEntropyLoss 内部会自动计算 softmax
-        #   4. Dropout 在训练时随机丢弃部分神经元（rate=0.3），在 eval 模式下自动关闭
-
-        x = self.flatten(x)  # 展平
-        # 去掉下面代码的注释，并补全代码
+        x = self.flatten(x)  # [batch, 3, 32, 32] 展平为 [batch, 3072]
         x = F.relu(self.fc1(x))
         x = self.dropout1(x)
         x = F.relu(self.fc2(x))
         x = self.dropout2(x)
-        x = self.fc3(x)
+        x = self.fc3(x)  # 只输出 logits，不加 Softmax，交给 CrossEntropyLoss 处理
         return x
 
 
 class BasicBlock(nn.Module):
-    """
-    ResNet 基础残差块
-
-    结构：Conv3x3 -> BN -> ReLU -> Conv3x3 -> BN -> (+shortcut) -> ReLU
-    """
 
     def __init__(self, in_channels, out_channels, stride=1):
         super(BasicBlock, self).__init__()
 
-        # 第一个卷积层，可能下采样
         self.conv1 = nn.Conv2d(
             in_channels, out_channels, kernel_size=3,
             stride=stride, padding=1, bias=False
         )
         self.bn1 = nn.BatchNorm2d(out_channels)
 
-        # 第二个卷积层，不下采样
         self.conv2 = nn.Conv2d(
             out_channels, out_channels, kernel_size=3,
             stride=1, padding=1, bias=False
         )
         self.bn2 = nn.BatchNorm2d(out_channels)
 
-        # shortcut 连接
+        # 输入输出维度不一致时，用 1x1 卷积构建投影 shortcut 对齐维度
         self.shortcut = nn.Sequential()
         if stride != 1 or in_channels != out_channels:
             self.shortcut = nn.Sequential(
@@ -423,53 +279,31 @@ class BasicBlock(nn.Module):
             )
 
     def forward(self, x):
-        """
-        残差块前向传播
-
-        Args:
-            x: 输入特征图 [batch_size, in_channels, H, W]
-
-        Returns:
-            out: 输出特征图 [batch_size, out_channels, H', W']
-        """
-        # [学生填空]
-        # TODO : 实现 ResNet 基础残差块的前向传播
-        # 按照上面的基础残差块构造函数提供的成员以及残差块的定义，完成下面的代码
-        # 去掉下面代码的注释，并补全代码
         identity = self.shortcut(x)
         out = self.conv1(x)
         out = self.bn1(out)
         out = F.relu(out)
         out = self.conv2(out)
         out = self.bn2(out)
-        out += identity
+        out += identity  # 主干输出与 shortcut 相加，完成残差连接
         out = F.relu(out)
         return out
 
 
 class ResNet18(nn.Module):
-    """
-    ResNet-18 for CIFAR-10
-
-    结构：Conv1 -> [Layer1 x2] -> [Layer2 x2] -> [Layer3 x2] -> [Layer4 x2]
-         -> GlobalAvgPool -> FC(512, 10)
-
-    学生任务：理解残差结构，完成构建（已在 __init__ 中完成）
-    """
 
     def __init__(self, num_classes=10):
         super(ResNet18, self).__init__()
 
-        # 初始卷积层（针对 32x32 小图像调整）
+        # 针对 32x32 小图像，用 3x3 步长 1 卷积替代原版 7x7 步长 2 卷积
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
 
-        # 4 个残差层，通道数变化：64 -> 128 -> 256 -> 512
-        # 空间尺寸变化：32 -> 32 -> 16 -> 8 -> 4
-        self.layer1 = self._make_layer(64, 64, num_blocks=2, stride=1)  # 32x32
-        self.layer2 = self._make_layer(64, 128, num_blocks=2, stride=2)  # 16x16
-        self.layer3 = self._make_layer(128, 256, num_blocks=2, stride=2)  # 8x8
-        self.layer4 = self._make_layer(256, 512, num_blocks=2, stride=2)  # 4x4
+        # 4 个残差层通道数 64 -> 128 -> 256 -> 512，stride=2 时空间尺寸减半
+        self.layer1 = self._make_layer(64, 64, num_blocks=2, stride=1)
+        self.layer2 = self._make_layer(64, 128, num_blocks=2, stride=2)
+        self.layer3 = self._make_layer(128, 256, num_blocks=2, stride=2)
+        self.layer4 = self._make_layer(256, 512, num_blocks=2, stride=2)
 
         self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512, num_classes)
@@ -477,25 +311,9 @@ class ResNet18(nn.Module):
         self._initialize_weights()
 
     def _make_layer(self, in_channels, out_channels, num_blocks, stride):
-        """
-        构建残差层
-
-        Args:
-            in_channels: 输入通道数
-            out_channels: 输出通道数
-            num_blocks: 残差块数量
-            stride: 第一个块的步长
-
-        提示：
-            1. 每个残差层由多个 BasicBlock 组成
-            2. 第一个 BasicBlock 可能下采样（stride 可能大于 1）
-            3. 后续 BasicBlock 不下采样（stride=1）
-            4. 使用 nn.Sequential(*layers) 将列表转换为顺序容器
-        """
         layers = []
-        # 第一个块可能下采样
+        # 第一个块负责下采样，后续块保持特征图尺寸不变
         layers.append(BasicBlock(in_channels, out_channels, stride))
-        # 后续块不下采样
         for _ in range(1, num_blocks):
             layers.append(BasicBlock(out_channels, out_channels, stride=1))
         return nn.Sequential(*layers)
@@ -509,39 +327,27 @@ class ResNet18(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
     def forward(self, x):
-        """
-        前向传播
-
-        Args:
-            x: 输入图像 [batch_size, 3, 32, 32]
-
-        Returns:
-            logits: 分类分数 [batch_size, num_classes]
-        """
         x = F.relu(self.bn1(self.conv1(x)))
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
         x = self.avg_pool(x)
-        x = x.view(x.size(0), -1)
+        x = x.view(x.size(0), -1)  # 全局池化后展平为 [batch, 512]
         x = self.fc(x)
         return x
 
 
-# 测试代码
 if __name__ == '__main__':
-    # 测试 MLP
     mlp = MLP(num_classes=10)
     x = torch.randn(2, 3, 32, 32)
     out = mlp(x)
-    print(f"MLP 输出形状: {out.shape}")  # 正确答案应该是输出[2, 10]
+    print(f"MLP 输出形状: {out.shape}")
     print(f"MLP 参数量: {sum(p.numel() for p in mlp.parameters()) / 1e6:.2f}M")
 
-    # 测试 ResNet-18
     resnet = ResNet18(num_classes=10)
     out = resnet(x)
-    print(f"ResNet 输出形状: {out.shape}")  # 正确答案应该是输出[2, 10]
+    print(f"ResNet 输出形状: {out.shape}")
     print(f"ResNet 参数量: {sum(p.numel() for p in resnet.parameters()) / 1e6:.2f}M")
 ```
 
@@ -559,17 +365,6 @@ if __name__ == '__main__':
 - `test()` 先加载权重，再在测试集上推理，打印测试准确率与 `classification_report`，并绘制混淆矩阵保存为 `confusion_matrix.png`。
 
 ```python
-"""
-训练与测试模块 - 兼容 PyTorch 2.7.1
-
-学生任务：
-1. 完成损失函数、优化器和学习率调度器的配置
-2. 实现一个 epoch 的训练循环（梯度清零、前向传播、反向传播、参数更新）
-3. 实现验证流程（模型评估、准确率统计）
-4. 实现完整训练流程（训练-验证循环、保存最佳模型、绘制曲线）
-5. 实现模型测试流程（加载权重、推理、生成分类报告和混淆矩阵）
-"""
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -582,15 +377,6 @@ import numpy as np
 
 
 class Trainer:
-    """
-    模型训练器 - 修复 PyTorch 2.7.1 兼容性问题
-
-    学生任务：
-    1. 配置损失函数和优化器
-    2. 实现训练循环的核心步骤
-    3. 实现验证和测试流程
-    4. 绘制训练曲线并保存最佳模型
-    """
 
     def __init__(self, model, train_loader, val_loader, device,
                  lr=0.001, weight_decay=1e-4, model_name='model'):
@@ -600,46 +386,27 @@ class Trainer:
         self.device = device
         self.model_name = model_name
 
-        # [学生填空]
-        # TODO : 配置损失函数和优化器
-        # 提示：
-        #   1. 分类任务通常使用交叉熵损失 nn.CrossEntropyLoss()
-        #   2. 优化器选用 Adam，需要传入模型参数 model.parameters()
-        #   3. 学习率 lr 和权重衰减 weight_decay 已从函数参数传入，需要设置在optim.Adam函数当中
-
+        # 交叉熵损失 + Adam 优化器（带权重衰减）
         self.criterion = nn.CrossEntropyLoss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr, weight_decay=weight_decay)
 
-        # 配置学习率调度器
-        #   1. 使用 optim.lr_scheduler.ReduceLROnPlateau
-        #   2. 监控指标是验证准确率，所以 mode='max'（越大越好）
-        #   3. factor=0.5 表示学习率衰减为原来的一半
-        #   4. patience=3 表示验证准确率连续 3 轮不提升就降低学习率
-        #   5. 注意：PyTorch 2.7.1 已移除 verbose 参数，需手动打印学习率变化
-
+        # 验证准确率连续 3 轮不提升时学习率减半（PyTorch 2.7.1 无 verbose 参数）
         self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(
             self.optimizer,
-            mode='max',  # 监控准确率（最大化）
-            factor=0.5,  # 学习率衰减因子
-            patience=3,  # 等待轮数
-            # verbose=True        # 移除！PyTorch 2.7.1 不支持
+            mode='max',
+            factor=0.5,
+            patience=3
         )
 
-        # 训练历史
+        # 训练历史，用于绘制训练曲线
         self.history = {
             'train_loss': [], 'train_acc': [],
             'val_loss': [], 'val_acc': []
         }
         self.best_acc = 0.0
-        self.current_lr = lr  # 记录当前学习率
+        self.current_lr = lr
 
     def train_epoch(self):
-        """
-        训练一个 epoch
-
-        学生任务：完成训练循环的核心步骤
-        提示：梯度清零 -> 前向传播 -> 计算损失 -> 反向传播 -> 参数更新
-        """
         self.model.train()
         total_loss = 0.0
         correct = 0
@@ -649,41 +416,19 @@ class Trainer:
         for inputs, labels in pbar:
             inputs, labels = inputs.to(self.device), labels.to(self.device)
 
-            # [学生填空]
-            # TODO : 梯度清零
-            # 提示：
-            #   1. 每个 batch 开始前必须清零梯度，否则梯度会累加
-            #   2. 调用优化器的 zero_grad() 方法
-
+            # 训练五步：梯度清零 -> 前向传播 -> 计算损失 -> 反向传播 -> 参数更新
             self.optimizer.zero_grad()
-
-            # [学生填空]
-            # TODO : 前向传播 + 计算损失
-            # 提示：
-            #   1. 将 inputs 输入模型，得到 outputs（未归一化的分类分数 logits）
-            #   2. 使用 self.criterion 计算 outputs 和 labels 之间的损失
-            #   3. 注意：CrossEntropyLoss 内部会自动做 softmax，不需要额外处理
-
             outputs = self.model(inputs)
             loss = self.criterion(outputs, labels)
-
-            # [学生填空]
-            # TODO : 反向传播和参数更新
-            # 提示：
-            #   1. 反向传播计算梯度
-            #   2. 更新模型参数
-            #   3. 这两步的顺序不能颠倒
-
             loss.backward()
             self.optimizer.step()
 
-            # 统计
+            # 统计当前 epoch 的损失与准确率
             total_loss += loss.item()
             _, predicted = outputs.max(1)
             total += labels.size(0)
             correct += predicted.eq(labels).sum().item()
 
-            # 更新进度条
             pbar.set_postfix({
                 'loss': f'{loss.item():.4f}',
                 'acc': f'{100. * correct / total:.2f}%',
@@ -695,12 +440,7 @@ class Trainer:
         return avg_loss, accuracy
 
     def validate(self):
-        """
-        验证一个 epoch
-
-        学生任务：在验证模式下进行前向推理
-        提示：使用 torch.no_grad() 关闭梯度计算
-        """
+        # eval 模式 + no_grad：关闭 Dropout 与 BN 更新，不计算梯度
         self.model.eval()
         total_loss = 0.0
         correct = 0
@@ -711,21 +451,8 @@ class Trainer:
             for inputs, labels in pbar:
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
 
-                # [学生填空]
-                # TODO : 前向传播 + 计算损失
-                # 提示：
-                #   1. 验证阶段不需要计算梯度（已在 torch.no_grad() 上下文中）
-                #   2. 与训练阶段相同：inputs -> model -> outputs -> criterion -> loss
-                #   3. 注意：模型已在 eval 模式，Dropout 和 BatchNorm 行为会自动调整
-
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, labels)
-
-                # 统计验证损失和准确率
-                #   1. 累加当前 batch 的 loss.item() 到 total_loss
-                #   2. 使用 outputs.max(1) 获取预测类别（返回最大值和索引，取索引）
-                #   3. 累加 batch 样本数到 total
-                #   4. 统计预测正确的样本数：predicted.eq(labels).sum().item()
 
                 total_loss += loss.item()
                 _, predicted = outputs.max(1)
@@ -739,16 +466,6 @@ class Trainer:
         return avg_loss, accuracy
 
     def train(self, epochs=20, save_dir='./checkpoints'):
-        """
-        完整训练流程
-
-        学生任务：实现训练-验证循环
-        提示：
-        1. 每轮先训练再验证
-        2. 记录训练和验证的 loss / acc
-        3. 调用 scheduler.step(val_acc) 调整学习率
-        4. 当验证准确率最高时保存模型权重
-        """
         os.makedirs(save_dir, exist_ok=True)
         best_model_path = os.path.join(save_dir, f'{self.model_name}_best.pth')
 
@@ -761,38 +478,15 @@ class Trainer:
         for epoch in range(epochs):
             print(f"\nEpoch [{epoch + 1}/{epochs}]")
 
-            # [学生填空]
-            # TODO : 训练一个 epoch
-            # 提示：
-            #   1. 调用 self.train_epoch() 完成当前 epoch 的训练
-            #   2. 返回值：train_loss（平均损失）, train_acc（准确率）
-
             train_loss, train_acc = self.train_epoch()
-
-            # [学生填空]
-            # TODO : 验证一个 epoch
-            # 提示：
-            #   1. 调用 self.validate() 完成当前 epoch 的验证
-            #   2. 返回值：val_loss（平均损失）, val_acc（准确率）
-
             val_loss, val_acc = self.validate()
-
-            # 记录训练历史
-            #   1. self.history 是一个字典，包含四个列表：
-            #      'train_loss', 'train_acc', 'val_loss', 'val_acc'
-            #   2. 将当前 epoch 的指标 append 到对应列表中
-            #   3. 这些历史数据后续用于绘制训练曲线
 
             self.history['train_loss'].append(train_loss)
             self.history['train_acc'].append(train_acc)
             self.history['val_loss'].append(val_loss)
             self.history['val_acc'].append(val_acc)
 
-            # 学习率调整 - 手动监控变化
-            #   1. 调用 self.scheduler.step(val_acc) 让调度器根据验证准确率决定是否降低学习率
-            #   2. 调度器会修改 self.optimizer.param_groups[0]['lr']
-            #   3. 比较调整前后的 lr，如果发生变化则打印提示信息
-
+            # 调度器按验证准确率调整学习率，变化时手动打印
             old_lr = self.optimizer.param_groups[0]['lr']
             self.scheduler.step(val_acc)
             new_lr = self.optimizer.param_groups[0]['lr']
@@ -800,47 +494,27 @@ class Trainer:
             if new_lr != old_lr:
                 print(f"! 学习率调整: {old_lr:.6f} -> {new_lr:.6f}")
 
-            # 打印结果
             print(f"Train Loss: {train_loss:.4f}, Acc: {train_acc:.2f}%")
             print(f"Val   Loss: {val_loss:.4f}, Acc: {val_acc:.2f}%")
             print(f"LR: {new_lr:.6f}")
 
-            # 保存最佳模型
-            #   1. 比较当前验证准确率 val_acc 和历史最佳准确率 self.best_acc
-            #   2. 如果当前更高，更新 self.best_acc 并保存模型权重
-            #   3. 使用 torch.save(model.state_dict(), path) 保存参数
-            #   4. best_model_path 已在函数开头定义好
-
+            # 验证准确率创新高时保存当前权重
             if val_acc > self.best_acc:
                 self.best_acc = val_acc
                 torch.save(self.model.state_dict(), best_model_path)
                 print(f"[OK] 保存最佳模型，准确率: {val_acc:.2f}%")
 
-        # 保存训练历史
+        # 保存训练历史并绘制损失/准确率曲线
         history_path = os.path.join(save_dir, f'{self.model_name}_history.json')
         with open(history_path, 'w') as f:
             json.dump(self.history, f, indent=2)
 
-        # 绘制曲线
         self.plot_history(save_dir)
 
         return self.history
 
     def plot_history(self, save_dir):
-        """
-        绘制训练曲线
-
-        使用 matplotlib 绘制损失曲线和准确率曲线
-        创建 1x2 的子图，分别绘制 loss 和 accuracy
-        """
         fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-
-        # 绘制损失曲线（训练集 + 验证集）
-        #   1. 在左侧子图 axes[0] 上绘制两条曲线
-        #   2. self.history['train_loss'] 是训练损失列表
-        #   3. self.history['val_loss'] 是验证损失列表
-        #   4. 设置 xlabel='Epoch', ylabel='Loss', title='Loss Curve'
-        #   5. 调用 legend() 显示图例，grid(True) 显示网格
 
         axes[0].plot(self.history['train_loss'], label='Train Loss')
         axes[0].plot(self.history['val_loss'], label='Val Loss')
@@ -849,13 +523,6 @@ class Trainer:
         axes[0].set_title('Loss Curve')
         axes[0].legend()
         axes[0].grid(True)
-
-        # 绘制准确率曲线（训练集 + 验证集）
-        #   1. 在右侧子图 axes[1] 上绘制两条曲线
-        #   2. self.history['train_acc'] 是训练准确率列表
-        #   3. self.history['val_acc'] 是验证准确率列表
-        #   4. 设置 xlabel='Epoch', ylabel='Accuracy (%)', title='Accuracy Curve'
-        #   5. 调用 legend() 显示图例，grid(True) 显示网格
 
         axes[1].plot(self.history['train_acc'], label='Train Acc')
         axes[1].plot(self.history['val_acc'], label='Val Acc')
@@ -871,19 +538,7 @@ class Trainer:
 
 
 def test(model, test_loader, device, model_path=None, num_classes=10):
-    """
-    测试模型
-    1. 如有 model_path，先加载保存的权重
-    2. 在 eval 模式下进行推理，统计总体准确率
-    3. 收集所有预测和真实标签，生成分类报告和混淆矩阵
-    """
-
-    # 加载模型权重（如果提供）
-    #   1. 当 model_path 不为 None 时，说明需要从文件加载训练好的权重
-    #   2. 使用 torch.load(model_path, map_location=device) 加载权重字典
-    #   3. 使用 model.load_state_dict() 将权重载入模型
-    #   4. map_location=device 确保在不同设备（CPU/GPU）间都能正常加载
-
+    # 加载训练好的最优权重，map_location 保证跨设备加载
     if model_path is not None:
         model.load_state_dict(torch.load(model_path, map_location=device))
         print(f"加载模型: {model_path}")
@@ -896,15 +551,7 @@ def test(model, test_loader, device, model_path=None, num_classes=10):
     correct = 0
     total = 0
 
-    # 在测试集上进行推理并收集预测结果
-    #   1. 使用 torch.no_grad() 包裹推理过程，节省显存并加速
-    #   2. 遍历 test_loader，每次获取一个 batch 的 inputs 和 labels
-    #   3. 将数据移到 device（GPU/CPU）
-    #   4. 前向传播得到 outputs，用 max(1) 取预测类别
-    #   5. 累加 total（总样本数）和 correct（正确数）
-    #   6. 将预测和标签转为 numpy 数组，分别存入 all_preds 和 all_labels
-    #      （后续用于生成混淆矩阵和分类报告）
-
+    # 推理阶段不计算梯度，收集全部预测用于生成分类报告与混淆矩阵
     with torch.no_grad():
         for inputs, labels in tqdm(test_loader, desc='Testing'):
             inputs, labels = inputs.to(device), labels.to(device)
@@ -917,32 +564,15 @@ def test(model, test_loader, device, model_path=None, num_classes=10):
             all_preds.extend(predicted.cpu().numpy())
             all_labels.extend(labels.cpu().numpy())
 
-    # 计算并打印测试准确率
-    #   1. 准确率 = 正确预测样本数 / 总样本数 * 100
-    #   2. 使用已统计的 correct 和 total 计算
-    #   3. 打印格式：测试准确率: xx.xx%
-
     accuracy = 100. * correct / total
     print(f"\n测试准确率: {accuracy:.2f}%")
-
-    # 打印详细分类报告
-    #   1. 使用 sklearn.metrics.classification_report 生成分类报告
-    #   2. 需要传入 all_labels（真实标签）、all_preds（预测标签）
-    #   3. target_names 是 10 个类别的名称，已定义在 classes 变量中
-    #   4. digits=4 表示保留 4 位小数
 
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')
     print("\n分类报告:")
     print(classification_report(all_labels, all_preds, target_names=classes, digits=4))
 
-    # 绘制混淆矩阵并保存为图片
-    #   1. 使用 sklearn.metrics.confusion_matrix(all_labels, all_preds) 计算混淆矩阵
-    #   2. 使用 matplotlib 绘制热力图：plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
-    #   3. 设置标题、colorbar、坐标轴刻度和标签
-    #   4. plt.tight_layout() 自动调整布局
-    #   5. 保存为 confusion_matrix.png，dpi=150，然后 plt.close() 释放内存
-
+    # 混淆矩阵热力图：行为真实标签，列为预测标签
     cm = confusion_matrix(all_labels, all_preds)
     plt.figure(figsize=(10, 8))
     plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
@@ -960,12 +590,11 @@ def test(model, test_loader, device, model_path=None, num_classes=10):
     return accuracy
 
 
-# 测试代码
 if __name__ == '__main__':
     from models import MLP, ResNet18
     from torch.utils.data import TensorDataset, DataLoader
 
-    # 创建模拟数据（用于快速测试，无需下载真实数据集）
+    # 构造模拟数据，快速验证训练流程而无需下载数据集
     batch_size = 16
     num_samples = 64
     x = torch.randn(num_samples, 3, 32, 32)
@@ -979,7 +608,6 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"使用设备: {device}\n")
 
-    # 测试 MLP 训练器初始化和一个 epoch 训练
     print("=" * 50)
     print("测试 1: MLP Trainer 初始化与单 epoch 训练")
     print("=" * 50)
@@ -990,7 +618,6 @@ if __name__ == '__main__':
     val_loss, val_acc = trainer_mlp.validate()
     print(f"验证 Loss: {val_loss:.4f}, Acc: {val_acc:.2f}%")
 
-    # 测试 ResNet18 训练器初始化和一个 epoch 训练
     print("\n" + "=" * 50)
     print("测试 2: ResNet18 Trainer 初始化与单 epoch 训练")
     print("=" * 50)
@@ -1001,7 +628,6 @@ if __name__ == '__main__':
     val_loss, val_acc = trainer_resnet.validate()
     print(f"验证 Loss: {val_loss:.4f}, Acc: {val_acc:.2f}%")
 
-    # 测试完整训练流程（仅 2 个 epoch，快速验证）
     print("\n" + "=" * 50)
     print("测试 3: MLP 完整训练流程（2 epochs）")
     print("=" * 50)
@@ -1011,7 +637,6 @@ if __name__ == '__main__':
     print(f"训练历史记录键: {list(history.keys())}")
     print(f"最佳验证准确率: {trainer_full.best_acc:.2f}%")
 
-    # 测试 test 函数
     print("\n" + "=" * 50)
     print("测试 4: test 函数（使用刚保存的模型）")
     print("=" * 50)
@@ -1020,7 +645,6 @@ if __name__ == '__main__':
     acc = test(mlp3, test_loader, device, model_path=model_path)
     print(f"test 函数返回准确率: {acc:.2f}%")
 
-    # 清理测试文件
     import shutil
 
     if os.path.exists('./checkpoints_test'):
@@ -1042,10 +666,6 @@ if __name__ == '__main__':
 5. 对比两个模型的参数量与测试准确率，把结果写入 `comparison_results.txt`。
 
 ```python
-"""
-主程序：运行对比实验 - PyTorch 2.7.1 兼容版
-"""
-
 import torch
 import os
 from data_engineering import CIFAR10Data
@@ -1054,7 +674,6 @@ from train import Trainer, test
 
 
 def main():
-    # 设备配置
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"使用设备: {device}")
     
@@ -1062,20 +681,19 @@ def main():
         print("警告: 未检测到CUDA，将使用CPU训练（速度较慢）")
         print("建议: 检查GPU驱动或安装CUDA版本的PyTorch")
     
-    # 数据准备
     print("\n" + "=" * 50)
     print("步骤1: 数据工程")
     print("=" * 50)
     
     try:
-        data_manager = CIFAR10Data(batch_size=128, num_workers=0)  # Windows用0
+        # Windows 平台 num_workers=0，避免多进程 DataLoader 报错
+        data_manager = CIFAR10Data(batch_size=128, num_workers=0)
         train_loader, val_loader, test_loader = data_manager.get_loaders(val_ratio=0.1)
     except FileNotFoundError as e:
         print(e)
         print("\n请先准备CIFAR-10数据！")
         return
     
-    # 实验1: MLP
     print("\n" + "=" * 50)
     print("步骤2: MLP模型训练与测试")
     print("=" * 50)
@@ -1089,10 +707,10 @@ def main():
     )
     trainer_mlp.train(epochs=10)
     
+    # 训练结束后从 checkpoint 加载最优权重，在测试集评估
     test_acc_mlp = test(mlp, test_loader, device, 
                        model_path='./checkpoints/MLP_best.pth')
     
-    # 实验2: ResNet-18
     print("\n" + "=" * 50)
     print("步骤3: ResNet-18模型训练与测试")
     print("=" * 50)
@@ -1109,7 +727,6 @@ def main():
     test_acc_resnet = test(resnet, test_loader, device,
                           model_path='./checkpoints/ResNet18_best.pth')
     
-    # 对比总结
     print("\n" + "=" * 50)
     print("步骤4: 实验结果对比")
     print("=" * 50)
@@ -1119,7 +736,6 @@ def main():
     print(f"{'ResNet-18':<15} {resnet_params:<10.2f} {test_acc_resnet:<10.2f}%")
     print("=" * 50)
     
-    # 保存对比结果
     with open('comparison_results.txt', 'w') as f:
         f.write("图像分类实验对比结果\n")
         f.write("=" * 50 + "\n")
@@ -1141,8 +757,6 @@ if __name__ == '__main__':
 实现要点：先检查 `./checkpoints/MLP_best.pth` 与 `./checkpoints/ResNet18_best.pth` 是否存在，缺失则直接退出并提示先运行 `main.py`；随后从测试集随机抽取 8 个样本，用两个模型分别推理，`softmax` 后取最大概率作为置信度，用 2×8 的子图上下对照展示（绿色表示预测正确、红色表示预测错误），并打印两个模型在这 8 个样本上的正确率。
 
 ```python
-# visualize_image_classification.py - 实验1可视化演示
-
 import torch
 import matplotlib.pyplot as plt
 from torchvision import transforms
@@ -1156,54 +770,41 @@ from models import MLP, ResNet18
 
 
 def denormalize(tensor, mean=(0.4914, 0.4822, 0.4465), std=(0.2023, 0.1994, 0.2010)):
-    """反归一化，用于显示图片"""
+    # 反归一化，把标准化后的张量还原到 [0,1] 区间用于显示
     for t, m, s in zip(tensor, mean, std):
         t.mul_(s).add_(m)
     return torch.clamp(tensor, 0, 1)
 
 
 def visualize_comparison(num_samples=8, save_path='visualization_image.png'):
-    """
-    对比可视化：MLP vs ResNet-18
-    上面一行：MLP预测结果
-    下面一行：ResNet-18预测结果
-    """
-    
-    # 设备
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"使用设备: {device}")
     
-    # 类别名称
     classes = ('plane', 'car', 'bird', 'cat', 'deer', 
               'dog', 'frog', 'horse', 'ship', 'truck')
     
-    # 加载数据（只加载测试集）
+    # 只加载测试集用于抽样展示
     print("加载数据...")
     data_manager = CIFAR10Data(batch_size=1, num_workers=0)
     _, _, test_loader = data_manager.get_loaders(val_ratio=0.1)
     
-    # 随机选择样本
+    # 从测试集中随机抽取指定数量的样本
     test_size = len(test_loader.dataset)
     random_indices = random.sample(range(test_size), num_samples)
     
-    # 创建子集加载器
     subset = Subset(test_loader.dataset, random_indices)
     subset_loader = DataLoader(subset, batch_size=1, shuffle=False)
     
-    # 加载模型
     print("加载模型...")
     
-    # MLP
     mlp = MLP(num_classes=10).to(device)
     mlp.load_state_dict(torch.load('./checkpoints/MLP_best.pth', map_location=device))
     mlp.eval()
     
-    # ResNet-18
     resnet = ResNet18(num_classes=10).to(device)
     resnet.load_state_dict(torch.load('./checkpoints/ResNet18_best.pth', map_location=device))
     resnet.eval()
     
-    # 收集预测结果
     images = []
     labels_true = []
     preds_mlp = []
@@ -1216,19 +817,17 @@ def visualize_comparison(num_samples=8, save_path='visualization_image.png'):
         for images_batch, labels_batch in subset_loader:
             images_batch = images_batch.to(device)
             
-            # MLP预测
+            # Softmax 将 logits 转为概率分布，取最大项作为预测类别与置信度
             outputs_mlp = mlp(images_batch)
             probs_mlp = torch.softmax(outputs_mlp, dim=1)
             pred_mlp = torch.argmax(probs_mlp, dim=1).item()
             conf_mlp_val = torch.max(probs_mlp).item()
             
-            # ResNet预测
             outputs_resnet = resnet(images_batch)
             probs_resnet = torch.softmax(outputs_resnet, dim=1)
             pred_resnet = torch.argmax(probs_resnet, dim=1).item()
             conf_resnet_val = torch.max(probs_resnet).item()
             
-            # 保存结果
             img = denormalize(images_batch[0].cpu())
             images.append(img)
             labels_true.append(labels_batch.item())
@@ -1237,20 +836,18 @@ def visualize_comparison(num_samples=8, save_path='visualization_image.png'):
             conf_mlp.append(conf_mlp_val)
             conf_resnet.append(conf_resnet_val)
     
-    # 创建可视化图
+    # 2x8 子图：上行展示 MLP 预测，下行展示 ResNet-18 预测
     fig, axes = plt.subplots(2, num_samples, figsize=(num_samples * 2, 4))
     
     for i in range(num_samples):
-        # 上面一行：MLP结果
         ax_mlp = axes[0, i]
         ax_mlp.imshow(images[i].permute(1, 2, 0).numpy())
         ax_mlp.axis('off')
         
-        # 标注预测结果（右上角）
         pred_label = classes[preds_mlp[i]]
-        true_label = classes[labels_true[i]]
         is_correct = preds_mlp[i] == labels_true[i]
         
+        # 绿色表示预测正确，红色表示预测错误
         color = 'green' if is_correct else 'red'
         text = f"{pred_label}\n{conf_mlp[i]:.2f}"
         
@@ -1259,7 +856,6 @@ def visualize_comparison(num_samples=8, save_path='visualization_image.png'):
                    ha='right', va='top',
                    bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
         
-        # 下面一行：ResNet结果
         ax_res = axes[1, i]
         ax_res.imshow(images[i].permute(1, 2, 0).numpy())
         ax_res.axis('off')
@@ -1275,7 +871,6 @@ def visualize_comparison(num_samples=8, save_path='visualization_image.png'):
                    ha='right', va='top',
                    bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
     
-    # 添加行标签
     fig.text(0.02, 0.75, 'MLP', ha='center', va='center', 
             fontsize=14, weight='bold', rotation=90)
     fig.text(0.02, 0.25, 'ResNet-18', ha='center', va='center',
@@ -1289,7 +884,7 @@ def visualize_comparison(num_samples=8, save_path='visualization_image.png'):
     
     print(f"\n✓ 可视化结果已保存: {save_path}")
     
-    # 打印统计
+    # 统计两个模型在这批样本上的正确率
     correct_mlp = sum(1 for p, t in zip(preds_mlp, labels_true) if p == t)
     correct_resnet = sum(1 for p, t in zip(preds_resnet, labels_true) if p == t)
     
@@ -1301,7 +896,7 @@ def visualize_comparison(num_samples=8, save_path='visualization_image.png'):
 
 
 if __name__ == '__main__':
-    # 检查模型文件
+    # 权重文件缺失时提示先运行 main.py
     if not os.path.exists('./checkpoints/MLP_best.pth'):
         print("错误：找不到 MLP_best.pth，请先运行 main.py 训练模型")
         exit(1)
@@ -1310,7 +905,6 @@ if __name__ == '__main__':
         print("错误：找不到 ResNet18_best.pth，请先运行 main.py 训练模型")
         exit(1)
     
-    # 生成可视化
     visualize_comparison(num_samples=8)
 ```
 
